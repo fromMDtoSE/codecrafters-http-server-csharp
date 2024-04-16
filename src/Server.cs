@@ -42,7 +42,7 @@ void HandleRequest(TcpClient client)
     : "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
 
     string[] args = Environment.GetCommandLineArgs();
-    Console.WriteLine(args);
+    Console.WriteLine(args[1]);
 
     if (args[1] == "--directory")
     {
