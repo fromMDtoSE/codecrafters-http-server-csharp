@@ -13,9 +13,14 @@ try
     server.Start();
     while (true)
     {
-        TcpClient client = server.AcceptTcpClient();
-        NetworkStream stream = client.GetStream();
+        using var tcpClientHandler = await server.AcceptTcpClientAsync();
+        await using NetworkStream stream = tcpClientHandler.GetStream();
+
         var response = Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n\r\n");
-        await stream.WriteAsync(response, 0, response.Length);
+        await stream.WriteAsync(response);
     }
+}
+finally
+{
+    server.Dispose();
 }
