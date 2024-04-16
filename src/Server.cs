@@ -49,7 +49,9 @@ void HandleRequest(TcpClient client)
         if (requestWithFile)
         {
             string filePath = requestPath.Split("/files")[1];
+            Console.WriteLine(filePath);
             string fileFullPath = args[2] + filePath;
+            Console.WriteLine(fileFullPath);
             if (File.Exists(filePath))
             {
                 byte[] fileContent = File.ReadAllBytes(fileFullPath);
