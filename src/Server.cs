@@ -41,22 +41,26 @@ void HandleRequest(TcpClient client)
     byte[] response = Encoding.UTF8.GetBytes(okStatusCode ? $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {responseContent.Length}\r\n\r\n{responseContent}"
     : "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
 
-    bool requestWithFile = requestPath.Contains("/file");
+    string[] args = Environment.GetCommandLineArgs();
+    Console.WriteLine(args);
 
-    if (requestWithFile)
+    if (args[1] == "--directory")
     {
-        string filePath = requestPath.Split("/files/")[1];
-        string[] args = Environment.GetCommandLineArgs();
-        string fileFullPath = args[2] + filePath;
-        if (File.Exists(filePath))
+        bool requestWithFile = requestPath.Contains("/file");
+        if (requestWithFile)
         {
-            byte[] fileContent = File.ReadAllBytes(fileFullPath);
-            response =
-                Encoding.UTF8.GetBytes($"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {fileContent.Length}\r\n\r\n");
-        }
-        else
-        {
-            response = Encoding.UTF8.GetBytes("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
+            string filePath = requestPath.Split("/files/")[1];
+            string fileFullPath = args[2] + filePath;
+            if (File.Exists(filePath))
+            {
+                byte[] fileContent = File.ReadAllBytes(fileFullPath);
+                response =
+                    Encoding.UTF8.GetBytes($"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {fileContent.Length}\r\n\r\n");
+            }
+            else
+            {
+                response = Encoding.UTF8.GetBytes("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
+            }
         }
     }
 
