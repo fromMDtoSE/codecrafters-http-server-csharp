@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection.Metadata;
 using System.Text;
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -37,10 +38,27 @@ void HandleRequest(TcpClient client)
     ? requestPath.Split("/echo/")[1] : requestPath.Contains("/user-agent")
     ? request.Split("User-Agent: ")[1].Split("\r\n")[0] : string.Empty;
 
-    Console.WriteLine(responseContent);
-
     byte[] response = Encoding.UTF8.GetBytes(okStatusCode ? $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {responseContent.Length}\r\n\r\n{responseContent}"
     : "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
+
+    bool requestWithFile = requestPath.Contains("/file");
+
+    if (requestWithFile)
+    {
+        string filePath = requestPath.Split("/files/")[1];
+        string[] args = Environment.GetCommandLineArgs();
+        string fileFullPath = args[2] + filePath;
+        if (File.Exists(filePath))
+        {
+            byte[] fileContent = File.ReadAllBytes(fileFullPath);
+            response =
+                Encoding.UTF8.GetBytes($"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {fileContent.Length}\r\n\r\n");
+        }
+        else
+        {
+            response = Encoding.UTF8.GetBytes("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
+        }
+    }
 
     stream.Write(response, 0, response.Length);
     client.Close();
