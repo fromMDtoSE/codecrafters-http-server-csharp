@@ -52,6 +52,7 @@ void HandleRequest(TcpClient client)
             if (File.Exists(fileFullPath))
             {
                 byte[] fileContent = File.ReadAllBytes(fileFullPath);
+                Console.WriteLine(Encoding.UTF8.GetString(fileContent));
                 response = Encoding.UTF8.GetBytes($"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {fileContent.Length}\r\n\r\n");
             }
             else
