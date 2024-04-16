@@ -21,15 +21,20 @@ try
         await stream.ReadAsync(buffer, 0, buffer.Length);
         string request = Encoding.UTF8.GetString(buffer);
 
-        string requestPath = request.Split(" ")[1];
-        bool basePathOrEcho = requestPath == "/" || requestPath.Contains("/echo");
-        int reqestPathLength = requestPath.Length;
+        // string requestPath = request.Split(" ")[1];
+        // bool basePathOrEcho = requestPath == "/" || requestPath.Contains("/echo");
+        // int reqestPathLength = requestPath.Length;
 
-        string randomStringFromRequest = requestPath.Contains("/echo") ? requestPath.Split("/echo/")[1] : string.Empty;
-        Console.WriteLine(randomStringFromRequest);
+        // string randomStringFromRequest = requestPath.Contains("/echo") ? requestPath.Split("/echo/")[1] : string.Empty;
+        // Console.WriteLine(randomStringFromRequest);
 
-        byte[] response = Encoding.UTF8.GetBytes(basePathOrEcho ? $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {randomStringFromRequest.Length}\r\n\r\n{randomStringFromRequest}"
-        : "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
+        // byte[] response = Encoding.UTF8.GetBytes(basePathOrEcho ? $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {randomStringFromRequest.Length}\r\n\r\n{randomStringFromRequest}"
+        // : "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
+
+        string userAgent = request.Split("User-Agent: ")[1];
+        Console.WriteLine(userAgent);
+
+        byte[] response = Encoding.UTF8.GetBytes($"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {userAgent.Length}\r\n\r\n{userAgent}");
         await stream.WriteAsync(response);
     }
 }
