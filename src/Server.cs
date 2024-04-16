@@ -48,7 +48,7 @@ void HandleRequest(TcpClient client)
         bool requestWithFile = requestPath.Contains("/files");
         if (requestWithFile)
         {
-            string filePath = requestPath.Split("/files")[1];
+            string filePath = requestPath.Split("/files/")[1];
             Console.WriteLine(filePath);
             string fileFullPath = args[2] + filePath;
             Console.WriteLine(fileFullPath);
