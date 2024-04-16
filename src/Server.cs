@@ -40,6 +40,8 @@ void HandleRequest(TcpClient client)
     byte[] response = new byte[0];
 
     string[] args = Environment.GetCommandLineArgs();
+    bool sendFile = false;
+    byte[] fileContent = new byte[0];
 
     if (args.Length > 1 && args[1] == "--directory")
     {
@@ -52,7 +54,8 @@ void HandleRequest(TcpClient client)
 
             if (File.Exists(fileFullPath))
             {
-                byte[] fileContent = File.ReadAllBytes(fileFullPath);
+                fileContent = File.ReadAllBytes(fileFullPath);
+                sendFile = true;
                 response = Encoding.UTF8.GetBytes($"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {fileContent.Length}\r\n\r\n");
             }
             else
@@ -71,6 +74,15 @@ void HandleRequest(TcpClient client)
         : "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
     }
 
-    stream.Write(response, 0, response.Length);
+    if (sendFile)
+    {
+        stream.Write(response, 0, response.Length);
+        stream.Write(fileContent, 0, fileContent.Length);
+    }
+    else
+    {
+        stream.Write(response, 0, response.Length);
+    }
+
     client.Close();
 }
