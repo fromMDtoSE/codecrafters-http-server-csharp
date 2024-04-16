@@ -47,11 +47,9 @@ void HandleRequest(TcpClient client)
         if (requestWithFile)
         {
             string filePath = requestPath.Split("/files/")[1];
-            Console.WriteLine(filePath);
             string fileFullPath = args[2] + filePath;
-            Console.WriteLine(fileFullPath);
-            Console.WriteLine(File.Exists(fileFullPath));
-            if (File.Exists(filePath))
+
+            if (File.Exists(fileFullPath))
             {
                 byte[] fileContent = File.ReadAllBytes(fileFullPath);
                 response = Encoding.UTF8.GetBytes($"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {fileContent.Length}\r\n\r\n");
