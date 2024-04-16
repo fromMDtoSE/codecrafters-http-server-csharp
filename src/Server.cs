@@ -46,19 +46,23 @@ void HandleRequest(TcpClient client)
         bool requestWithFile = requestPath.Contains("/files");
         if (requestWithFile)
         {
+            string directoryPath = args[2];
             string filePath = requestPath.Split("/files/")[1];
-            string fileFullPath = args[2] + filePath;
+            string fileFullPath = Path.Combine(directoryPath, filePath);
 
             if (File.Exists(fileFullPath))
             {
                 byte[] fileContent = File.ReadAllBytes(fileFullPath);
-                Console.WriteLine(Encoding.UTF8.GetString(fileContent));
                 response = Encoding.UTF8.GetBytes($"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {fileContent.Length}\r\n\r\n");
             }
             else
             {
                 response = Encoding.UTF8.GetBytes("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
             }
+        }
+        else
+        {
+            response = Encoding.UTF8.GetBytes("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
         }
     }
     else
