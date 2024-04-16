@@ -35,7 +35,7 @@ try
         string requestPath = request.Split(" ")[1];
         bool basePathOrAgent = requestPath == "/" || requestPath.Contains("/user-agent");
 
-        string userAgent = request.Split("User-Agent: ")[1];
+        string userAgent = request.Split("User-Agent: ")[1].Split("\r\n")[0];
         Console.WriteLine(userAgent);
 
         byte[] response = Encoding.UTF8.GetBytes(basePathOrAgent ? $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {userAgent.Length}\r\n\r\n{userAgent}"
