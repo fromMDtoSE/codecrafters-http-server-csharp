@@ -43,7 +43,7 @@ void HandleRequest(TcpClient client)
 
     string[] args = Environment.GetCommandLineArgs();
 
-    if (args[1] == "--directory")
+    if (args.Length > 1 && args[1] == "--directory")
     {
         bool requestWithFile = requestPath.Contains("/files");
         if (requestWithFile)
