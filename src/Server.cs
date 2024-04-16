@@ -16,7 +16,12 @@ try
         using var tcpClientHandler = await server.AcceptTcpClientAsync();
         await using NetworkStream stream = tcpClientHandler.GetStream();
 
-        var response = Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n\r\n");
+        // read the stream and see if path is "/" to return 200 Ok else return 404 Not Found
+        byte[] buffer = new byte[1024];
+        await stream.ReadAsync(buffer, 0, buffer.Length);
+        string request = Encoding.UTF8.GetString(buffer);
+        string path = request.Split("\r\n")[0].Split(" ")[1];
+        byte[] response = Encoding.UTF8.GetBytes(path == "/" ? "HTTP/1.1 200 OK\r\n\r\n" : "HTTP/1.1 404 Not Found\r\n\r\n");
         await stream.WriteAsync(response);
     }
 }
