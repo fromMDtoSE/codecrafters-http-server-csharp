@@ -27,7 +27,7 @@ try
         bool basePathOrEcho = requestPath == "/" || requestPath == "/echo";
         int reqestPathLength = requestPath.Length;
 
-        string randomStringFromRequest = requestPath == "/echo" ? request.Split(" ")[2].Substring(6, reqestPathLength) : string.Empty;
+        string randomStringFromRequest = requestPath == "/echo" ? request.Split(" ")[2].Split("/echo/")[1] : string.Empty;
         Console.WriteLine(randomStringFromRequest);
 
         byte[] response = Encoding.UTF8.GetBytes(basePathOrEcho ? $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {randomStringFromRequest.Length}\r\n\r\n{randomStringFromRequest}"
