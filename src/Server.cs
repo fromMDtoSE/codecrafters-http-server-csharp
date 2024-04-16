@@ -20,10 +20,12 @@ try
         byte[] buffer = new byte[1024];
         await stream.ReadAsync(buffer, 0, buffer.Length);
         string request = Encoding.UTF8.GetString(buffer);
+        Console.WriteLine(request);
         bool basePathOrEcho = request.Split("\r\n")[0].Split(" ")[1] == "/" || request.Split("\r\n")[0].Split(" ")[1].StartsWith("/echo");
-        string randomStringFromRequest = request.Split("\r\n")[0].Split(" ")[1].Split("/")[1];
+        string randomStringFromRequest = request.Split("\r\n")[0].Split(" ")[1].Split("/")[2];
         Console.WriteLine(randomStringFromRequest);
-        byte[] response = Encoding.UTF8.GetBytes($"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {randomStringFromRequest.Length}\r\n\r\n{randomStringFromRequest}");
+        byte[] response = Encoding.UTF8.GetBytes(basePathOrEcho ? $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {randomStringFromRequest.Length}\r\n\r\n{randomStringFromRequest}"
+        : "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
         await stream.WriteAsync(response);
     }
 }
