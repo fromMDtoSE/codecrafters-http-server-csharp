@@ -45,13 +45,19 @@ void HandleRequest(TcpClient client)
 
     if (args.Length > 1 && args[1] == "--directory")
     {
-        bool requestWithFile = requestPath.Contains("/files");
-        if (requestWithFile)
-        {
-            string directoryPath = args[2];
-            string filePath = requestPath.Split("/files/")[1];
-            string fileFullPath = Path.Combine(directoryPath, filePath);
+        string directoryPath = args[2];
+        string filePath = requestPath.Split("/files/")[1];
+        string fileFullPath = Path.Combine(directoryPath, filePath);
 
+        bool requestWithFile = requestPath.Contains("/files");
+        if (requestWithFile && request.Split(" ")[0].ToLower() == "post")
+        {
+            File.WriteAllText(fileFullPath, request.Split("\r\n\r\n")[1]);
+            sendFile = true;
+            response = Encoding.UTF8.GetBytes($"HTTP/1.1 201 Created\r\n\r\n");
+        }
+        else if (requestWithFile && request.Split(" ")[0].ToLower() == "get")
+        {
             if (File.Exists(fileFullPath))
             {
                 fileContent = File.ReadAllBytes(fileFullPath);
