@@ -22,12 +22,10 @@ try
         string request = Encoding.UTF8.GetString(buffer);
 
         string requestPath = request.Split(" ")[1];
-        Console.WriteLine(requestPath);
-
-        bool basePathOrEcho = requestPath == "/" || requestPath == "/echo";
+        bool basePathOrEcho = requestPath == "/" || requestPath.Contains("/echo");
         int reqestPathLength = requestPath.Length;
 
-        string randomStringFromRequest = requestPath == "/echo" ? request.Split(" ")[2].Split("/echo/")[1] : string.Empty;
+        string randomStringFromRequest = requestPath.Contains("/echo") ? requestPath.Split("/echo/")[1] : string.Empty;
         Console.WriteLine(randomStringFromRequest);
 
         byte[] response = Encoding.UTF8.GetBytes(basePathOrEcho ? $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {randomStringFromRequest.Length}\r\n\r\n{randomStringFromRequest}"
