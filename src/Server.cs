@@ -13,29 +13,35 @@ try
     server.Start();
     while (true)
     {
-        using var tcpClientHandler = await server.AcceptTcpClientAsync();
-        await using NetworkStream stream = tcpClientHandler.GetStream();
-
-        byte[] buffer = new byte[1024];
-        await stream.ReadAsync(buffer, 0, buffer.Length);
-        string request = Encoding.UTF8.GetString(buffer);
-
-        string requestPath = request.Split(" ")[1];
-        bool okStatusCode = requestPath == "/" || requestPath.Contains("/echo") || requestPath.Contains("/user-agent");
-        int reqestPathLength = requestPath.Length;
-
-        string responseContent = requestPath.Contains("/echo")
-        ? requestPath.Split("/echo/")[1] : requestPath.Contains("/user-agent")
-        ? request.Split("User-Agent: ")[1].Split("\r\n")[0] : string.Empty;
-
-        Console.WriteLine(responseContent);
-
-        byte[] response = Encoding.UTF8.GetBytes(okStatusCode ? $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {responseContent.Length}\r\n\r\n{responseContent}"
-        : "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
-        await stream.WriteAsync(response);
+        TcpClient tcpClientHandler = await server.AcceptTcpClientAsync();
+        _ = Task.Run(() => HandleRequest(tcpClientHandler));
     }
 }
 finally
 {
     server.Dispose();
+}
+
+void HandleRequest(TcpClient client)
+{
+    using NetworkStream stream = client.GetStream();
+    byte[] buffer = new byte[1024];
+    int bytesRead = stream.Read(buffer, 0, buffer.Length);
+    string request = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+
+    string requestPath = request.Split(" ")[1];
+    bool okStatusCode = requestPath == "/" || requestPath.Contains("/echo") || requestPath.Contains("/user-agent");
+    int reqestPathLength = requestPath.Length;
+
+    string responseContent = requestPath.Contains("/echo")
+    ? requestPath.Split("/echo/")[1] : requestPath.Contains("/user-agent")
+    ? request.Split("User-Agent: ")[1].Split("\r\n")[0] : string.Empty;
+
+    Console.WriteLine(responseContent);
+
+    byte[] response = Encoding.UTF8.GetBytes(okStatusCode ? $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {responseContent.Length}\r\n\r\n{responseContent}"
+    : "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
+
+    stream.Write(response, 0, response.Length);
+    client.Close();
 }
