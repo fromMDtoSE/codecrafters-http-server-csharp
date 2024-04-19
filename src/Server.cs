@@ -51,7 +51,7 @@ void HandleRequest(TcpClient client)
 
 string GetRequestPath(string request) => request.Split(" ")[1];
 
-bool IsValidRequest(string requestPath) => requestPath.Contains("/") || requestPath.Contains("/echo") || requestPath.Contains("/user-agent") || requestPath.Contains("/files");
+bool IsValidRequest(string requestPath) => requestPath == "/" || requestPath.Contains("/echo") || requestPath.Contains("/user-agent") || requestPath.Contains("/files");
 
 string GetResponseContent(string requestPath, int reqestPathLength, string request) => requestPath.Contains("/echo")
     ? requestPath.Split("/echo/")[1] : requestPath.Contains("/user-agent")
