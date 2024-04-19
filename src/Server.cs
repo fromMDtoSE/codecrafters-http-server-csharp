@@ -50,7 +50,9 @@ void HandleRequest(TcpClient client)
 }
 
 string GetRequestPath(string request) => request.Split(" ")[1];
-bool IsValidRequest(string requestPath) => requestPath.Contains("/echo") || requestPath.Contains("/user-agent") || requestPath.Contains("/files");
+
+bool IsValidRequest(string requestPath) => requestPath.Contains("/") || requestPath.Contains("/echo") || requestPath.Contains("/user-agent") || requestPath.Contains("/files");
+
 string GetResponseContent(string requestPath, int reqestPathLength, string request) => requestPath.Contains("/echo")
     ? requestPath.Split("/echo/")[1] : requestPath.Contains("/user-agent")
     ? request.Split("User-Agent: ")[1].Split("\r\n")[0] : string.Empty;
@@ -61,6 +63,7 @@ void RespondToFileRequest(string requestPath, string request, string[] args, Net
     string filePath = requestPath.Split("/files/")[1];
     string fileFullPath = Path.Combine(directoryPath, filePath);
     bool requestWithFile = requestPath.Contains("/files");
+
     if (requestWithFile && request.Split(" ")[0].ToLower() == "post")
     {
         File.WriteAllText(fileFullPath, request.Split("\r\n\r\n")[1]);
