@@ -29,66 +29,66 @@ void HandleRequest(TcpClient client)
     int bytesRead = stream.Read(buffer, 0, buffer.Length);
     string request = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
-    string requestPath = request.Split(" ")[1];
-    bool okStatusCode = requestPath == "/" || requestPath.Contains("/echo") || requestPath.Contains("/user-agent");
+    var requestPath = GetRequestPath(request);
+    var okStatusCode = IsValidRequest(requestPath);
     int reqestPathLength = requestPath.Length;
-
-    string responseContent = requestPath.Contains("/echo")
-    ? requestPath.Split("/echo/")[1] : requestPath.Contains("/user-agent")
-    ? request.Split("User-Agent: ")[1].Split("\r\n")[0] : string.Empty;
-
-    byte[] response = new byte[0];
+    string responseContent = GetResponseContent(requestPath, reqestPathLength, request);
 
     string[] args = Environment.GetCommandLineArgs();
-    bool sendFile = false;
-    byte[] fileContent = new byte[0];
 
     if (args.Length > 1 && args[1] == "--directory")
     {
-        string directoryPath = args[2];
-        string filePath = requestPath.Split("/files/")[1];
-        string fileFullPath = Path.Combine(directoryPath, filePath);
-
-        bool requestWithFile = requestPath.Contains("/files");
-        if (requestWithFile && request.Split(" ")[0].ToLower() == "post")
-        {
-            File.WriteAllText(fileFullPath, request.Split("\r\n\r\n")[1]);
-            sendFile = true;
-            response = Encoding.UTF8.GetBytes($"HTTP/1.1 201 Created\r\n\r\n");
-        }
-        else if (requestWithFile && request.Split(" ")[0].ToLower() == "get")
-        {
-            if (File.Exists(fileFullPath))
-            {
-                fileContent = File.ReadAllBytes(fileFullPath);
-                sendFile = true;
-                response = Encoding.UTF8.GetBytes($"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {fileContent.Length}\r\n\r\n");
-            }
-            else
-            {
-                response = Encoding.UTF8.GetBytes("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
-            }
-        }
-        else
-        {
-            response = Encoding.UTF8.GetBytes("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
-        }
+        RespondToFileRequest(requestPath, request, args, stream);
     }
     else
     {
-        response = Encoding.UTF8.GetBytes(okStatusCode ? $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {responseContent.Length}\r\n\r\n{responseContent}"
-        : "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
-    }
-
-    if (sendFile)
-    {
-        stream.Write(response, 0, response.Length);
-        stream.Write(fileContent, 0, fileContent.Length);
-    }
-    else
-    {
+        var response = GenerateResponseBytes(okStatusCode, false, false, responseContent.Length, responseContent.Length, responseContent);
         stream.Write(response, 0, response.Length);
     }
 
     client.Close();
 }
+
+string GetRequestPath(string request) => request.Split(" ")[1];
+bool IsValidRequest(string requestPath) => requestPath.Contains("/echo") || requestPath.Contains("/user-agent") || requestPath.Contains("/files");
+string GetResponseContent(string requestPath, int reqestPathLength, string request) => requestPath.Contains("/echo")
+    ? requestPath.Split("/echo/")[1] : requestPath.Contains("/user-agent")
+    ? request.Split("User-Agent: ")[1].Split("\r\n")[0] : string.Empty;
+
+void RespondToFileRequest(string requestPath, string request, string[] args, NetworkStream stream)
+{
+    string directoryPath = args[2];
+    string filePath = requestPath.Split("/files/")[1];
+    string fileFullPath = Path.Combine(directoryPath, filePath);
+    bool requestWithFile = requestPath.Contains("/files");
+    if (requestWithFile && request.Split(" ")[0].ToLower() == "post")
+    {
+        File.WriteAllText(fileFullPath, request.Split("\r\n\r\n")[1]);
+        byte[] response = GenerateResponseBytes(true, true, true, 0, 0, "");
+        stream.Write(response, 0, response.Length);
+    }
+    else if (requestWithFile && request.Split(" ")[0].ToLower() == "get")
+    {
+        if (File.Exists(fileFullPath))
+        {
+            byte[] fileContent = File.ReadAllBytes(fileFullPath);
+            byte[] response = GenerateResponseBytes(true, true, false, fileContent.Length, 0, "");
+            stream.Write(response, 0, response.Length);
+            stream.Write(fileContent, 0, fileContent.Length);
+        }
+        else
+        {
+            byte[] response = GenerateResponseBytes(false, false, false, 0, 0, "");
+            stream.Write(response, 0, response.Length);
+        }
+    }
+}
+
+byte[] GenerateResponseBytes(bool isSuccessResponse, bool respondWithFile, bool isPost, int fileContentLength, int responseContentLength, string responseContent) =>
+isSuccessResponse && respondWithFile && isPost
+? Encoding.UTF8.GetBytes($"HTTP/1.1 201 Created\r\n\r\n")
+: isSuccessResponse && respondWithFile && !isPost
+    ? Encoding.UTF8.GetBytes($"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {fileContentLength}\r\n\r\n")
+    : isSuccessResponse && !respondWithFile && !isPost
+        ? Encoding.UTF8.GetBytes($"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {responseContentLength}\r\n\r\n{responseContent}")
+        : Encoding.UTF8.GetBytes("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found");
